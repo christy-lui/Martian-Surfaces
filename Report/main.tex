@@ -1,0 +1,268 @@
+\documentclass[10pt,twocolumn,letterpaper]{article}
+%% Welcome to Overleaf!
+%% If this is your first time using LaTeX, it might be worth going through this brief presentation:
+%% https://www.overleaf.com/latex/learn/free-online-introduction-to-latex-part-1
+
+%% Researchers have been using LaTeX for decades to typeset their papers, producing beautiful, crisp documents in the process. By learning LaTeX, you are effectively following in their footsteps, and learning a highly valuable skill!
+
+%% The \usepackage commands below can be thought of as analogous to importing libraries into Python, for instance. We've pre-formatted this for you, so you can skip right ahead to the title below.
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=2  cm,bottom=2 cm,left=2 cm,right=2 cm,marginparwidth= 2cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{natbib}
+\bibliographystyle{unsrt}
+\usepackage{float}
+\usepackage[justification=centering]{caption}
+
+\begin{document}
+
+\twocolumn[ % Start the optional argument for full-width content
+\begin{center}
+    \vspace{0.3 cm}
+    \fontsize{14 pt}{14 pt}\selectfont \textbf{Deep Learning - Midterm} \\
+    \vspace{0.2 cm}
+    \fontsize{12 pt}{12 pt}\selectfont Christy Lui \\
+    \vspace{0.2 cm}
+    \fontsize{12 pt}{12 pt}\selectfont 241001637
+    \vspace{0.2 cm}
+\end{center}
+] % End the optional argument
+% ... The rest of your document content starts flowing in two columns here ...
+
+\section{Introduction}
+The Kepler mission was launched in 2009 to survey a region of our galaxy and determine which stars host planets. Its primary mission concluded in 2013, after which it continued a more limited search until 2018.\\
+
+This analysis is on the Cumulative Kepler Objects of Interest (KOIs) data set, from the National Aeronautics and Space Administration Exoplanet Archive. The data set documents the key signs of being planets. These objects have been categorized as confirmed, candidate, or false positive planets. This data set was used to train logistic regression and XGBoost models to more accurately predict whether these objects are truly confirmed planets. 
+
+\section{Data Preparation and Feature Engineering}
+
+The dataset was parsed into a data frame, then a separate data frame was created for the target variable, 'koi\_disposition'. This column contained the categorical values 'CANDIDATE', 'CONFIRMED', and 'FALSE POSITIVE', which were then encoded numerically as 0, 1, and 2, respectively. The data was checked for missing values, and none were found in this initial target variable. The class balance was then calculated and is shown in Table 1. The classes aren't evenly balanced and will be accounted for during model training. 
+
+\begin{table}[H]
+\centering
+\caption{Class Distribution in \texttt{y\_train}}
+\begin{tabular}{lcc}
+\hline
+{Class} & {Count} & {Percentage (\%)} \\
+\hline
+Candidate (0)  & 1583 & 20.69 \\
+Confirmed (1) & 2197 & 28.72 \\
+False Positive (2) & 3871 & 50.59 \\
+\hline
+\end{tabular}
+\end{table}
+
+ 
+\textbf{Feature Selection and Cleaning} \\
+ 
+Twenty-two features were manually selected based on the definitions and descriptions provided for each column in the dataset documentation. A separate data frame was created for these final features. The data was then checked for missing values; sixteen columns containing missing values were imputed using the median. Although the dataset contained outliers, they were retained because outliers are normally preserved in astrophysics datasets, as they may represent real phenomena. For this reason, the mean would not be an appropriate imputation method. Indicator flags were also created to mark these columns had missing values and were imputed to tell the algorithm to proceed with cautions with these columns.\\
+ 
+ 
+To confirm the suitability of the hand-selected features, analysis from the trained models was used. The logistic regression coefficient heatmap shown in Figure 1 was plotted, where dark red indicates a strong positive coefficient and dark blue indicates a strong negative coefficient for each class. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{coefficients_heatmap_color_only.png}
+    \caption{Logistic Regression Coefficients}
+    \label{fig:placeholder}
+\end{figure}
+
+Feature importance from XGBoost was also calculated and is shown in Figure 2. The two figures do not entirely agree, as logistic regression measures relationships linearly, whereas XGBoost calculates feature importance based on the sum of split counts across all trees. However, both methods highlight the most influential features and demonstrate which inputs are crucial for accurately predicting the target. Removing redundant, uninfluential features also improves model efficiency. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{XGB feature importance.png}
+    \caption{Baseline XGBoost Feature Importance}
+    \label{fig:placeholder}
+\end{figure}
+
+Once the feature selection was finalized, a separate data frame was created for these features. \\
+ 
+\textbf{Handling Missing Values and Scaling} \\
+ 
+The data frame was then checked for missing values; sixteen columns containing missing values were imputed using the median. The features were plotted as histograms, shown in Figure 3, to visually assess which ones required transformation or scaling. Binary features were excluded from these transformation and scaling procedures. Figure 4 shows the feature plots after the transformations and scaling were applied.\\
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Feature histo.png}
+    \caption{Features before Transformation and Scaling}
+    \label{fig:placeholder}
+\end{figure}
+
+Figure 4, shows the feature after transformation and scaling. 
+
+ \begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{features after.png}
+    \caption{Features After Transformation and Scaling}
+    \label{fig:placeholder}
+\end{figure}
+\textbf{Data Splitting} \\
+ 
+Finally, the processed data was split into training and test sets, with 80\% of the data allocated to the training set and 20\% to the test set. 
+
+\section{Model Selection and Training}
+
+Two models were trained for comparison: Logistic Regression and eXtreme Gradient Boosting (XGBoost). Both models are from scikit-learn and were fit using default parameters and with class weight adjustment. The evaluation of the model included calculating accuracy, generating a classification report, and producing a confusion matrix. \\
+
+Logistic Regression was selected as a naive baseline model because it is a simple model that can capture only linear interactions. This model provides a critical point of reference for evaluating the performance of the more complex XGBoost model. \\
+
+XGBoost was chosen for its ability to generally achieve higher accuracy than simpler models. It is an ensemble method that builds trees sequentially, with each new tree correcting the errors of the preceding ones . This allows the model to capture complex, non-linear relationships between features and the target, unlike logistic regression. \\
+
+Furthermore, tree-based models like XGBoost are robust against monotonic shifts, a benefit given the use of median imputation for missing values. Outliers can influence XGBoost, they were intentionally retained because they often represent a real phenomenon and were not deemed statistically significant enough to warrant removal. Missing indicator flag columns were added to the feature set, allowing the model to treat imputed values with caution and achieve greater accuracy. XGBoost was also trained using default parameters and with class weight adjustment. 
+
+
+\section{Model Evaluation and Tuning}
+
+The logistic regression and XGBoost model were evaluated with precision, recall and F1-score, this is shown in table 2 and 3 respectively. The accuracy shows the proportion of all classification that are correct, XGBoost has higher accuracy 0.927 compared to the logistic regression accuracy which is 0.913. The F1-score combines precision and recall using harmonic mean this is particularly useful in this case as the classes are unbalanced.  As the classes of this data set are unbalanced looking at the macro average F-1 score is gives an accurate representation for each class as it ensures the minority class is given equal weight. The macro average F-1 score is also higher for XGBoost 0.903 compared to logistic regression score of 0.886, making XGBoost the better performing model.  \\
+
+Looking at the class specific F1-score, XGBoost performs better for class 0, 0.830 while logistic regression scored 0.810. XGBoost also scores slightly higher for class 1, 0.889 compared to logistic regression 0.847. The two models are similar for class 2 which is both 0.927 for XGBoost and 0.913 for logistic regression.  
+ 
+ 
+
+\begin{table}[H]
+\centering
+\caption{Logistic Regression Classification Report}
+\begin{tabular}{@{}lccc@{}}
+\hline
+Class & Precision & Recall & F1-Score \\
+\hline
+Candidate (0) & 0.769 & 0.856 & 0.810 \\
+Confirmed (1) & 0.881 & 0.847 & 0.864 \\
+False Positive (2) & 0.998 & 0.973 & 0.985 \\
+\hline
+Accuracy & &  0.913 & \\
+Macro Avg & 0.882 & 0.892 & 0.886 \\
+Weighted Avg & 0.917 & 0.913 & 0.914 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+
+
+\begin{table}[H]
+\centering
+\caption{XGBoost Baseline Classification Report}
+\begin{tabular}{@{}lcccc@{}}
+\hline
+Class & Precision & Recall & F1-Score\\
+\hline
+Candidate (0) & 0.804 & 0.859 & 0.830 \\
+Confirmed (1) & 0.901 & 0.878 & 0.889 \\
+False Positive (2) & 0.996 & 0.982 & 0.989 \\
+\hline
+Accuracy & &  0.927 & \\
+Macro Avg & 0.900 & 0.906 & 0.903\\
+Weighted Avg & 0.929 & 0.927 & 0.928 \\
+\hline
+\end{tabular}
+\end{table}
+
+\textbf{Confusion Matrix Analysis} \\
+
+The logistic regression confusion matrix is shown in Figure 5. Examining the diagonal values, the model performs well, with 339 correctly predicted Candidates, 465 correctly predicted Confirmed planets, and 942 correctly predicted False Positives. However, it shows noticeable confusion between the Candidate and Confirmed classes, with 83 samples incorrectly predicted as Confirmed and 56 incorrectly predicted as Candidates. \\
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{logreg confusion matrix.png}
+    \caption{Logistic Regression Confusion Matrix}
+    \label{fig:placeholder}
+\end{figure}
+
+The XGBoost confusion matrix, shown in Figure 6, performs better overall, with 340 correctly predicted Candidates, 482 correctly predicted Confirmed planets, and 951 correctly predicted False Positives. Although it improves on logistic regression, some confusion between the Candidate and Confirmed classes remains, including 66 samples incorrectly predicted as Confirmed and 53 incorrectly predicted as Candidates. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{XGBoost confusion matrix.png}
+    \caption{XGBoost Baseline Confusion Matrix}
+    \label{fig:placeholder}
+\end{figure} 
+
+\textbf{ROC Curve and AUC Comparison} \\
+ 
+The Receiver Operating Characteristic (ROC) curve and its Area Under the Curve (AUC) were used to assess class-specific performance, with higher AUC values indicating stronger classification ability.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{logrec ROC.png}
+    \caption{Logistic Regression ROC Curve}
+    \label{fig:placeholder}
+\end{figure}
+
+As shown in Figure 7, Logistic Regression produced high AUC scores, with 0.962 for Class 0 (Candidate), 0.972 for Class 1 (Confirmed), and 0.999 for Class 2 (False Positive). XGBoost in Figure 8, further improved performance for the planetary classes, achieving AUCs of 0.974 for Class 0 and 0.984 for Class 1, while Class 2 remained high at 0.999. These consistently higher AUC values established XGBoost as the superior model, which motivated its selection for optimization.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{XGBoost ROC.png}
+    \caption{XGBoost ROC Curve}
+    \label{fig:placeholder}
+\end{figure}
+
+Using a five-fold random search with five candidates, resulting in 250 total fits, the optimized XGBoost model was retrained with the best parameters and produced strong final results. As shown in Table 4, the model achieved a highest accuracy of 0.932, a macro average F1-score of 0.910, and improved F1-scores for the planetary classes, with 0.842 for Class 0 and 0.900 for Class 1. Class 2 maintained a high F1-score of 0.989, matching baseline performance because it is the majority class and the easiest to predict. 
+
+\begin{table}[H]
+\centering
+\caption{Optimized XGBoost Classification Report}
+\begin{tabular}{@{}lcccc@{}}
+\hline
+Class & Precision & Recall & F1-Score \\
+\hline
+Candidate (0) & 0.819 & 0.866 & 0.842\\
+Confirmed (1) & 0.909 & 0.891 & 0.900 \\
+False Positive (2) & 0.995 & 0.982 & 0.989 \\
+\hline
+Accuracy & & 0.932 & \\
+Macro Avg & 0.907 & 0.913 & 0.910 \\
+Weighted Avg & 0.934 & 0.932 & 0.933 \\
+\hline
+\end{tabular}
+\end{table}
+
+Figure 9 presents the optimized XGBoost confusion matrix, which shows 343 correctly predicted Candidates, 489 correctly predicted Confirmed planets, and 951 correctly predicted False Positives. This performance surpasses the naïve XGBoost baseline model. Although performance improved, some confusion remains between the Candidate and Confirmed classes, with 59 samples incorrectly predicted as Candidate and 49 incorrectly predicted as Confirmed. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Optimized XGBoost confusion matrix.png}
+    \caption{Optimized XGBoost Confusion Matrix}
+    \label{fig:placeholder}
+\end{figure}
+
+The optimized XGBoost ROC curve is shown in Figure 10, which produced an AUC score of 0.973 for Class 0, 0.984 for Class 1, and 0.999 for Class 2. These results provide additional evidence that the optimized XGBoost model is the most effective at predicting true confirmed planets. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\linewidth]{Optimized ROC.png}
+    \caption{Optimized XGBoost ROC Curve}
+    \label{fig:placeholder}
+\end{figure}
+
+\section{Conclusion and Discussion}
+Logistic Regression and XGBoost, both trained with default parameters, served as effective baselines. Both models performed well, demonstrating an initial ability to capture the underlying relationships between the features and target variable. \\
+
+XGBoost was selected for further optimization due to its superior baseline performance. After parameter tuning, the optimized XGBoost model achieved the best overall results. Critically, it performed well without overfitting the data, indicating good generalization capability. \\
+
+Despite this improvement, the confusion matrix revealed persistent confusion between the \textit{Candidate} and \textit{Confirmed} classes. Reducing this specific source of misclassification remains the most promising direction for future work. Several strategies could be explored. At the data level, rebalancing the training set—such as through the application of SMOTE—may help make the boundaries between these classes more separable. Feature-importance methods such as SHAP may also be used to identify weak or misleading features and guide the construction of more discriminative representations. At the model level, more systematic hyperparameter optimization using tools like Optuna could further refine the classifier.\\
+
+Because class 2 dominates the dataset, substantial improvements in overall accuracy are unlikely; however, gains in macro-averaged F1 score remain achievable. It is also important to balance additional tuning against the risk of over-optimization, which can inflate performance metrics at the cost of generalization.\\
+
+Overall, the optimized XGBoost model captures most of the complex relationships present in the data and provides a strong foundation for further refinement\\
+
+\section*{Data Set}
+
+\href{https://exoplanetarchive.ipac.caltech.edu/cgi-bin/TblView/nph-tblView?app=ExoTbls&config=cumulative}{Kepler's Object of Interest (Cumulative)} \\
+\href{https://exoplanetarchive.ipac.caltech.edu/docs/API_kepcandidate_columns.html}{Data Column Definitions} 
+
+\end{document}
