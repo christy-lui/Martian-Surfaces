@@ -26,12 +26,3 @@ The notebook executes the following data preparation steps:
 3.  **Shuffling:** Randomizes the dataset using `scikit-learn`'s shuffle function with a fixed random state (`22`) to prevent order bias.
 4.  **Image Processing:** Loads the raw files, decodes the RGB JPEG images, resizes them to `128x128` pixels, and normalizes the pixel values to a `0.0 - 1.0` range.
 5.  **Dataset Optimization:** Builds a `tf.data.Dataset` pipeline that maps the processing functions, caches the data, shuffles it, applies a batch size of 128, and prefetches the images for maximum performance.
-
----
-
-## Current Status & Next Steps
-
-The data preprocessing pipeline is functioning and yields a processed batch of 128 images with a shape of `(128, 128, 128, 3)`. 
-
-**Pending Tasks:** * The immediate next step identified in the project notes is to plot one sample photo from each distinct image class.
-* Implement the neural network architecture, train the model using the batched dataset, and evaluate its performance.
